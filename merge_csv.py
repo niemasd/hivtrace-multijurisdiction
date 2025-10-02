@@ -34,7 +34,7 @@ def open_file(fn, mode='rt'):
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-oc', '--output_csv', required=True, type=str, help="Output Merged CSV")
-    parser.add_argument('-op', '--output_permissions', required=True, type=str, help="Output Permissons JSON")
+    parser.add_argument('-op', '--output_json', required=True, type=str, help="Output Info JSON")
     parser.add_argument('csv', nargs='+', type=str, help="Input CSV")
     args = parser.parse_args()
     args.csv = set(args.csv)
@@ -43,7 +43,7 @@ def parse_args():
     for fn in args.csv:
         if not isfile(fn):
             raise ValueError("File not found: %s" % fn)
-    for fn in [args.output_csv, args.output_permissions]:
+    for fn in [args.output_csv, args.output_json]:
         if isfile(fn):
             raise ValueError("Output file exists: %s" % fn)
     return args
@@ -93,9 +93,10 @@ def main():
         for unique_seq_vals in data.values():
             csv_writer.writerow([unique_seq_vals[name] for name in HEADER])
 
-    # write output permissions JSON
-    with open_file(args.output_permissions, 'wt') as f:
-        jdump(access, f)
+    # write output info JSON
+    info = {'access':access}
+    with open_file(args.output_json, 'wt') as f:
+        jdump(info, f)
 
 # run script
 if __name__ == "__main__":
