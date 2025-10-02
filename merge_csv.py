@@ -94,7 +94,10 @@ def main():
             csv_writer.writerow([unique_seq_vals[name] for name in HEADER])
 
     # write output info JSON
-    info = {'access':access}
+    info = {
+        'unique_seq_ID_fields': UNIQUE_ID_FIELDS, # fields to define a "unique" sequence
+        'access': access,                         # which input files have access to which unique sequence IDs
+    }
     with open_file(args.output_json, 'wt') as f:
         jdump(info, f)
 
