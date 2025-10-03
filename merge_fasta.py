@@ -31,8 +31,8 @@ def open_file(fn, mode='rt'):
 # parse user args
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-oc', '--output_fasta', required=True, type=str, help="Output Merged FASTA")
-    parser.add_argument('-op', '--output_json', required=True, type=str, help="Output Info JSON")
+    parser.add_argument('-of', '--output_fasta', required=True, type=str, help="Output Merged FASTA")
+    parser.add_argument('-oj', '--output_json', required=True, type=str, help="Output Info JSON")
     parser.add_argument('fasta', nargs='+', type=str, help="Input FASTA")
     args = parser.parse_args()
     args.fasta = set(args.fasta)
@@ -49,8 +49,9 @@ def parse_args():
 # load sequence data from FASTA
 def load_fasta(fasta_fn):
     data = dict() # same structure as `data` in `main()`
-    raise NotImplementedError("TODO CONTINUE HERE") # TODO
-    with open_file(csv_fn, 'rt') as f:
+    with open_file(fasta_fn, 'rt') as f:
+        lines = [l.strip() for l in f]
+        print('\n'.join(lines[:2])); exit() # TODO STORE SEQS IN DATA DICT, WHERE KEYS ARE UNIQUE SEQ TUPLES (NOT FASTA IDs)
         for row_num, row in enumerate(reader(f)):
             if row_num == 0: # header
                 header = [s.strip() for s in row]
@@ -73,9 +74,10 @@ def main():
     data = dict() # data[unique_seq_ID] = dict mapping column headers to values
     access = dict() # access[csv_fn] = set of unique_seq_ID tuples this jurisdiction has access to
 
-    # load data from CSVs
-    for csv_fn in args.csv:
-        curr_data = load_csv(csv_fn)
+    # load data from FASTAs
+    for fasta_fn in args.fasta:
+        curr_data = load_fasta(fasta_fn)
+        raise NotImplementedError("TODO CONTINUE HERE")
         access[csv_fn] = list(curr_data.keys())
         for unique_seq_ID, unique_seq_vals in curr_data.items():
             if unique_seq_ID in data:
