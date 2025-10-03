@@ -34,7 +34,7 @@ def open_file(fn, mode='rt'):
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-oc', '--output_csv', required=True, type=str, help="Output Merged CSV")
-    parser.add_argument('-op', '--output_json', required=True, type=str, help="Output Info JSON")
+    parser.add_argument('-oj', '--output_json', required=True, type=str, help="Output Info JSON")
     parser.add_argument('csv', nargs='+', type=str, help="Input CSV")
     args = parser.parse_args()
     args.csv = set(args.csv)
