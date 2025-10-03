@@ -12,7 +12,6 @@ import argparse
 
 # constants
 HIVTRACE_MERGE_FASTA_VERSION = '0.0.1'
-UNIQUE_ID_FIELDS = ['ehars_uid', 'SequenceID_predq', 'predq_clean_seq'] # fields to uniquely ID a sequence
 
 # open a file for reading/writing
 def open_file(fn, mode='rt'):
@@ -51,53 +50,30 @@ def load_fasta(fasta_fn):
     data = dict() # same structure as `data` in `main()`
     with open_file(fasta_fn, 'rt') as f:
         lines = [l.strip() for l in f]
-        print('\n'.join(lines[:2])); exit() # TODO STORE SEQS IN DATA DICT, WHERE KEYS ARE UNIQUE SEQ TUPLES (NOT FASTA IDs)
-        for row_num, row in enumerate(reader(f)):
-            if row_num == 0: # header
-                header = [s.strip() for s in row]
-                name2ind = {name:ind for ind, name in enumerate(header)}
-                global HEADER
-                if HEADER is None:
-                    HEADER = header
-            else:
-                unique_seq_ID = tuple(row[name2ind[name]] for name in UNIQUE_ID_FIELDS)
-                if unique_seq_ID in data:
-                    pass # TODO handle duplicate sequences in single jurisdiction's CSV (currently ignore all but first)
-                else:
-                    data[unique_seq_ID] = {header[ind]:val for ind, val in enumerate(row)}
+        data = {(lines[i][1:], lines[i+1]) for i in range(0, len(lines), 2)}
     return data
 
 # main script logic
 def main():
     # set things up
     args = parse_args()
-    data = dict() # data[unique_seq_ID] = dict mapping column headers to values
-    access = dict() # access[csv_fn] = set of unique_seq_ID tuples this jurisdiction has access to
+    data = set() # set of (fasta_ID, seq) tuples
+    access = dict() # access[fasta_fn] = set of (fasta_ID, seq) tuples this jurisdiction has access to
 
     # load data from FASTAs
     for fasta_fn in args.fasta:
         curr_data = load_fasta(fasta_fn)
-        raise NotImplementedError("TODO CONTINUE HERE")
-        access[csv_fn] = list(curr_data.keys())
-        for unique_seq_ID, unique_seq_vals in curr_data.items():
-            if unique_seq_ID in data:
-                existing_vals = data[unique_seq_ID]
-                if unique_seq_vals['hiv_aids_dx_dt'] < existing_vals['hiv_aids_dx_dt']:
-                    existing_vals['hiv_aids_dx_dt'] = unique_seq_vals['hiv_aids_dx_dt']
-            else:
-                data[unique_seq_ID] = unique_seq_vals
+        access[fasta_fn] = list(curr_data) # JSON can't serialize set
+        data |= curr_data
 
-    # write output merged CSV
-    with open_file(args.output_csv, 'wt') as f:
-        csv_writer = writer(f)
-        csv_writer.writerow(HEADER)
-        for unique_seq_vals in data.values():
-            csv_writer.writerow([unique_seq_vals[name] for name in HEADER])
+    # write output merged FASTA
+    with open_file(args.output_fasta, 'wt') as f:
+        for fasta_tuple in data:
+            f.write('>%s\n%s\n' % fasta_tuple)
 
     # write output info JSON
     info = {
-        'unique_seq_ID_fields': UNIQUE_ID_FIELDS, # fields to define a "unique" sequence
-        'access': access,                         # which input files have access to which unique sequence IDs
+        'access': access, # which input files have access to which unique sequence IDs
     }
     with open_file(args.output_json, 'wt') as f:
         jdump(info, f)
